@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IrysCrush</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/pvp.css">
+  <link rel="stylesheet" href="css/pvp-results.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <!-- Web3 Libraries -->
+  <script src="https://unpkg.com/ethers@6.10.0/dist/ethers.umd.min.js"></script>
+  <!-- Game System -->
+  <script src="js/game-system.js"></script>
+  <!-- Fallback CDN for ethers -->
+  <script>
+    // Check if ethers loaded, if not, load from alternative CDN
+    if (typeof ethers === 'undefined' && typeof window.ethers === 'undefined') {
+      // Primary ethers CDN failed, loading fallback
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/ethers/6.10.0/ethers.umd.min.js';
+      script.onload = () => {}; // Fallback ethers CDN loaded
+      script.onerror = () => console.error('❌ Fallback ethers CDN also failed');
+      document.head.appendChild(script);
+    }
+  </script>
+</head>
+<body>
+  <div id="main-menu" class="menu active">
+    <h1>IrysCrush</h1>
+    <button id="connect-wallet-btn">Connect Wallet</button>
+    <button id="disconnect-wallet-btn" style="display: none;">Disconnect wallet
+    </button>
+    <div id="wallet-info" style="margin: 10px 0; color: #ffd700; display: none;"></div>
+    <button id="play-btn">Play</button>
+    <button id="pvp-btn">🎯 PVP Mode</button>
+    <button id="leaderboard-btn">Leaderboard</button>
+    <button id="get-irys-btn">Get 0.1 IRYS</button>
+    <button id="settings-btn">Settings</button>
+    <button id="developers-btn" onclick="window.showDevelopersInline && window.showDevelopersInline()">Developers</button>
+  </div>
+
+  <div id="game-ui" class="hidden">
+    <div class="top-bar">
+      <span id="score-label">Points: <span id="score">0</span></span>
+      <span id="timer-label">Time: <span id="timer">60</span></span>
+      <button id="back-menu">Exit</button>
+    </div>
+    <div id="game-board"></div>
+  </div>
+
+  <div id="leaderboard-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>🏆 Leaderboard</h2>
+      <div class="leaderboard-container">
+        <ul id="leaderboard-list"></ul>
+        <div id="scroll-indicator" class="scroll-indicator hidden">
+          <span>↓ Scroll to see more ↓</span>
+        </div>
+      </div>
+      <button id="close-leaderboard">Close</button>
+    </div>
+  </div>
+
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Settings</h2>
+      <div class="settings-form">
+        <label for="player-nickname">Your nickname:</label>
+        <input id="player-nickname" maxlength="15" placeholder="Введіть нікнейм">
+      </div>
+      <button id="save-settings">Save</button>
+      <button id="close-settings">Cancel</button>
+    </div>
+  </div>
+
+  <div id="game-over-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Game over!</h2>
+      <p>Your result: <span id="final-score"></span></p>
+      <p id="score-status"></p>
+      <button id="restart-btn">Play again</button>
+      <button id="go-menu">Menu</button>
+    </div>
+  </div>
+
+  <!-- PVP Results Modal -->
+  <div id="pvp-results-modal" class="modal hidden">
+    <div class="modal-content pvp-results-content">
+      <h2 id="pvp-results-title">🎮 PVP Game Results</h2>
+      
+      <!-- Stage 1: Result Saved -->
+      <div id="pvp-stage-saved" class="pvp-stage">
+        <div class="pvp-stage-icon">💾</div>
+        <h3>Result Saved!</h3>
+        <p>Your score: <span id="pvp-your-score">0</span></p>
+        <p class="pvp-stage-description">Waiting for other players to finish...</p>
+        <div class="pvp-loading-spinner"></div>
+      </div>
+
+      <!-- Stage 2: Submitting to Blockchain -->
+      <div id="pvp-stage-blockchain" class="pvp-stage hidden">
+        <div class="pvp-stage-icon">⛓️</div>
+        <h3>Submitting to Blockchain</h3>
+        <p class="pvp-stage-description">All players finished! Determining winner...</p>
+        <div class="pvp-loading-spinner"></div>
+      </div>
+
+      <!-- Stage 3: Final Results -->
+      <div id="pvp-stage-results" class="pvp-stage hidden">
+        <div id="pvp-winner-announcement" class="pvp-winner-section">
+          <div class="pvp-stage-icon">🏆</div>
+          <h3 id="pvp-winner-text">Winner Announcement</h3>
+          <div id="pvp-winner-info" class="pvp-winner-info"></div>
+        </div>
+        
+        <div class="pvp-leaderboard-section">
+          <h4>📊 Final Leaderboard</h4>
+          <div id="pvp-final-leaderboard" class="pvp-leaderboard"></div>
+        </div>
+        
+        <div class="pvp-actions">
+          <button id="pvp-back-to-menu" class="pvp-btn primary">Back to Menu</button>
+        </div>
+      </div>
+
+      <!-- Error Stage -->
+      <div id="pvp-stage-error" class="pvp-stage hidden">
+        <div class="pvp-stage-icon">❌</div>
+        <h3>Error</h3>
+        <p id="pvp-error-message" class="pvp-error-text"></p>
+        <button id="pvp-error-retry" class="pvp-btn">Retry</button>
+        <button id="pvp-error-menu" class="pvp-btn secondary">Back to Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PVP Modal -->
+  <div id="pvp-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>🎯 PVP Mode</h2>
+      <div class="pvp-loading">
+        <p>Loading PVP interface...</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="developers-modal" class="modal hidden">
+    <div class="modal-content developers-content">
+      <h2>👨‍💻 Developers</h2>
+      <div class="developers-info">
+        <div class="developer-card">
+          <div class="developer-avatar">
+            <img src="images/egorble.jpg" alt="Egorble" class="developer-photo">
+      </div>
+          <h3>Egorble</h3>
+          <p class="developer-role">Vibe Coder</p>
+          <p class="developer-description">
+            Created this amazing Match-3 game with all functions. Passionate about web3 gaming and decentralized applications.
+          </p>
+          <div class="developer-social">
+            <a href="https://x.com/egor4042007" target="_blank" class="social-link twitter">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </a>
+            <a href="#" onclick="navigator.clipboard.writeText('egorble'); alert('Discord: egorble copied to clipboard!')" class="social-link discord">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+              </svg>
+            </a>
+      </div>
+          <div class="developer-tech">
+            <span class="tech-tag">JavaScript</span>
+            <span class="tech-tag">Node.js</span>
+            <span class="tech-tag">Blockchain</span>
+            <span class="tech-tag">Irys</span>
+    </div>
+  </div>
+        
+        <div class="developer-card">
+          <div class="developer-avatar">
+            <img src="images/wanfar.jpg" alt="WanFar" class="developer-photo">
+          </div>
+          <h3>WanFar</h3>
+          <p class="developer-role">Designer</p>
+          <p class="developer-description">
+            Responsible for the beautiful visual design and user experience of IrysCrush.
+            Expert in creating modern, engaging interfaces and game aesthetics.
+          </p>
+          <div class="developer-social">
+            <a href="https://x.com/WanFarNoCap" target="_blank" class="social-link twitter">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </a>
+            <a href="#" onclick="navigator.clipboard.writeText('wanfar'); alert('Discord: wanfar copied to clipboard!')" class="social-link discord">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+              </svg>
+            </a>
+          </div>
+          <div class="developer-tech">
+            <span class="tech-tag">UI/UX Design</span>
+            <span class="tech-tag">Visual Design</span>
+            <span class="tech-tag">Game Art</span>
+            <span class="tech-tag">ProCreate</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="game-info">
+        <h3>🎯 About IrysCrush</h3>
+        <p>
+          IrysCrush is a modern Match-3 puzzle game that combines classic gameplay. 
+          Connect your wallet, compete with players worldwide, and climb the decentralized leaderboard!
+        </p>
+        
+        <div class="game-features">
+          <div class="feature">
+            <span class="feature-icon">🔗</span>
+            <span>Wallet Integration</span>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">🏆</span>
+            <span>Global Leaderboard</span>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">💎</span>
+            <span>Blockchain Powered (soon)</span>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">🎮</span>
+            <span>Classic Gameplay</span>
+          </div>
+        </div>
+      </div>
+      
+      <button id="close-developers">Close</button>
+    </div>
+  </div>
+
+  <!-- Tasks Modal for Getting IRYS -->
+  <div id="tasks-modal" class="modal hidden">
+    <div class="modal-content tasks-content">
+      <h2>🎁 Get 0.1 IRYS Tokens</h2>
+              <p class="tasks-description">Complete these simple tasks to earn 0.1 IRYS tokens!</p>
+        <div class="score-requirement">
+                      <p><strong>⚠️ Requirement:</strong> You need at least <span class="required-score">2000 points</span> to claim the reward!</p>
+        </div>
+      
+      <div class="tasks-container">
+        <div class="task-item" id="task-1">
+          <div class="task-header">
+            <span class="task-number">1</span>
+            <h3>Follow @egor4042007</h3>
+            <span class="task-status" id="task-1-status">❌</span>
+          </div>
+          <p class="task-description">Follow Egorble on X (Twitter)</p>
+          <button class="task-button" id="follow-egorble-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            Follow Egorble
+          </button>
+        </div>
+
+        <div class="task-item" id="task-2">
+          <div class="task-header">
+            <span class="task-number">2</span>
+            <h3>Follow @WanFarNoCap</h3>
+            <span class="task-status" id="task-2-status">❌</span>
+          </div>
+          <p class="task-description">Follow WanFar on X (Twitter)</p>
+          <button class="task-button" id="follow-wanfar-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            Follow WanFar
+          </button>
+        </div>
+
+        <div class="task-item" id="task-3">
+          <div class="task-header">
+            <span class="task-number">3</span>
+            <h3>Follow @retreeq_</h3>
+            <span class="task-status" id="task-3-status">❌</span>
+          </div>
+          <p class="task-description">Follow Retree on X (Twitter)</p>
+          <button class="task-button" id="follow-retree-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            Follow Retree
+          </button>
+        </div>
+
+        <div class="task-item" id="task-4">
+          <div class="task-header">
+            <span class="task-number">4</span>
+            <h3>Share Your Best Score</h3>
+            <span class="task-status" id="task-4-status">❌</span>
+          </div>
+          <p class="task-description">Share your best score on X with our hashtag</p>
+          <button class="task-button" id="share-score-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            Share on X
+          </button>
+          
+          <div class="task-verification" id="task-4-verification" style="display: none;">
+            <h4>📝 Verify Your Post</h4>
+            <p>Paste the link to your X post below:</p>
+            <div class="verification-form">
+              <input type="url" id="post-link-input" placeholder="https://x.com/your-username/status/..." required>
+              <button id="submit-verification-btn">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tasks-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" id="tasks-progress-fill"></div>
+        </div>
+        <p class="progress-text">Progress: <span id="tasks-completed">0</span>/4 tasks completed</p>
+      </div>
+
+      <div class="tasks-reward" id="tasks-reward" style="display: none;">
+        <h3>🎉 Congratulations!</h3>
+        <p>All tasks completed! You've earned 0.1 IRYS tokens!</p>
+        <button id="claim-reward-btn" class="claim-button">Claim 0.1 IRYS</button>
+      </div>
+
+      <button id="close-tasks">Close</button>
+    </div>
+  </div>
+
+  <!-- Minimum Score Warning Modal -->
+  <div id="minimum-score-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>⚠️ Minimum Score Required</h2>
+              <p>You need at least <strong>2000 points</strong> to participate in the IRYS rewards program.</p>
+      <p>Your current best score: <span id="current-best-score">0</span></p>
+      <p>Keep playing to reach the minimum score!</p>
+      <button id="close-minimum-score">Got it!</button>
+    </div>
+            </div>
+
+  <!-- Debug script to check ethers loading -->
+  <script>
+    // Checking ethers availability
+    
+    // If ethers is not available as window.ethers, try to make it available
+    if (typeof window.ethers === 'undefined' && typeof ethers !== 'undefined') {
+      window.ethers = ethers;
+      // Assigned ethers to window.ethers
+    }
+    
+    // Final check
+    setTimeout(() => {
+      // Final ethers check
+      
+      if (typeof window.ethers === 'undefined' && typeof ethers === 'undefined') {
+        console.error('❌ Ethers library failed to load!');
+        alert('⚠️ Web3 library failed to load. Please check your internet connection and refresh the page.');
+      } else {
+        // Ethers library loaded successfully
+      }
+    }, 1000);
+  </script>
+  <script src="js/reward-system.js"></script>
+  <script src="js/leaderboard-system.js"></script>
+  <script src="js/developers-system.js"></script>
+  <script src="js/settings-system.js"></script>
+  <!-- PVP System Modules -->
+  <script src="js/pvp/pvp-config.js"></script>
+  <script src="js/pvp/pvp-time-manager.js"></script>
+  <script src="js/pvp/pvp-templates.js"></script>
+  <script src="js/pvp/pvp-core.js"></script>
+  <!-- PVP Game System - Modular Architecture -->
+  <script src="js/pvp/pvp-game-loader.js"></script>
+  <script src="js/pvp/pvp-ui.js"></script>
+  <script src="js/pvp/pvp-results-manager.js"></script>
+  <script src="js/pvp-system.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

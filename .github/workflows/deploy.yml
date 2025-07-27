@@ -1,0 +1,59 @@
+name: Deploy IrysCrush Game
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: npm test --if-present
+    
+    - name: Check for syntax errors
+      run: node -c server.js
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: npm ci --only=production
+    
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.PORT }}
+        script: |
+          cd /var/www/IrysCrush
+          git pull origin main
+          npm install --only=production
+          pm2 restart match3-game || pm2 start server.js --name "match3-game"
+          pm2 save 

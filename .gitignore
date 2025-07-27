@@ -1,0 +1,132 @@
+# ==========================================
+# IRYSGAME PROJECT .GITIGNORE
+# ==========================================
+# Цей файл визначає які файли та папки не повинні
+# потрапляти в Git репозиторій
+
+# Залежності
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# База даних
+*.db
+*.sqlite
+*.sqlite3
+
+# Логи
+logs/
+*.log
+
+# Тимчасові файли
+.tmp/
+temp/
+
+# Системні файли
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Змінні середовища
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# PM2
+.pm2/
+
+# SSL сертифікати
+*.pem
+*.key
+*.crt
+
+# Резервні копії
+*.backup
+*.bak
+
+# Конфігурації з реальними доменами
+nginx-config-production.conf
+
+# Blockchain та Smart Contracts
+artifacts/
+cache/
+deployments/
+*.abi
+*.bin
+deployment*.json
+real-deployment.json
+
+# Тестові файли та дебаг
+test-*.js
+debug-*.js
+*-debug.js
+*.test.js
+test_*.js
+
+# Документація та звіти (тимчасові)
+*_SUMMARY.md
+*_GUIDE.md
+*_ANALYSIS.md
+*_FIXES.md
+*_SOLUTION.md
+*_REPORT.md
+test-report.json
+
+# Скрипти розгортання
+deploy-*.sh
+upload-*.sh
+*.bat
+quick-deploy.*
+
+# Файли конфігурації серверів
+server-*.js
+*-controller.js
+*-api.js
+
+# Архіви та резервні копії
+*.rar
+*.zip
+*.tar.gz
+*.7z
+
+# Файли логів та текстові звіти
+*.txt
+distribution_log.txt
+reward_claims.txt
+task_verifications.txt
+
+# Тимчасові файли розробки
+check-*.js
+fix-*.js
+migrate-*.js
+process-*.js
+verify-*.js
+compile-*.js
+
+# Nginx конфігурації
+nginx-*.sh
+nginx-*.conf
+
+# SSL та домени
+setup-domain.sh
+*-ssl-*.sh
+recreate-ssl-*.sh
+renew-ssl-*.sh
+
+# Kiro IDE
+.kiro/
+
+# Hardhat
+hardhat.config.js
+hardhat-config.js
+
+# Вкладені Git репозиторії
+IrysCrush/

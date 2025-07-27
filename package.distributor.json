@@ -1,0 +1,26 @@
+{
+  "name": "irysgame-token-distributor",
+  "version": "1.0.0",
+  "description": "Automated token distribution system for IrysGame rewards",
+  "main": "token-distributor.js",
+  "scripts": {
+    "start": "node token-distributor.js",
+    "distribute": "node token-distributor.js verifications",
+    "distribute-file": "node token-distributor.js file",
+    "stats": "node -e \"const TokenDistributor = require('./token-distributor'); const d = new TokenDistributor(); d.initialize().then(() => d.showStats());\""
+  },
+  "dependencies": {
+    "ethers": "^6.13.4",
+    "dotenv": "^16.3.1"
+  },
+  "keywords": [
+    "ethereum",
+    "irys",
+    "blockchain",
+    "token",
+    "distribution",
+    "automation"
+  ],
+  "author": "IrysGame Team",
+  "license": "MIT"
+} 
