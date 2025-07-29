@@ -112,31 +112,37 @@ class PVPGameEngine {
     // ==========================================
 
     startTimer() {
-        // Спочатку зупиняємо всі існуючі таймери
+        // БЕЗПЕЧНА очистка тільки власних таймерів
         this.stopTimer();
         
-        // Stop main game timer to prevent conflicts
-        if (window.stopTimer && typeof window.stopTimer === 'function') {
-            window.stopTimer();
-            console.log('🛑 Stopped main game timer to prevent conflicts');
-        }
-        
-        // Очищаємо всі можливі інтервали (на всякий випадок)
-        if (window.pvpTimerInterval) {
-            clearInterval(window.pvpTimerInterval);
-            window.pvpTimerInterval = null;
+        // Валідація таймера перед стартом
+        if (isNaN(this.timer) || this.timer <= 0) {
+            console.warn('⚠️ Invalid timer value at start, resetting to default');
+            this.timer = this.gameTimeSeconds || 120;
         }
         
         this.ui.updateTimerDisplay();
         
-        console.log('⏰ Starting PVP timer with', this.timer, 'seconds');
+        console.log('⏰ Starting PVP timer with', this.timer, 'seconds (validated)');
         
-        // Створюємо новий інтервал з унікальним ідентифікатором
+        // Створюємо новий інтервал з додатковими перевірками
         this.timerInterval = setInterval(() => {
-            // Додаткова перевірка що гра все ще активна
-            if (!this.gameActive) {
-                console.log('🛑 Game no longer active, stopping timer');
+            // Множинні перевірки для стабільності
+            if (!this.gameActive || this.resultSubmitted || !this.timerInterval) {
+                console.log('🛑 Game state changed, stopping timer', {
+                    gameActive: this.gameActive,
+                    resultSubmitted: this.resultSubmitted,
+                    hasInterval: !!this.timerInterval
+                });
                 this.stopTimer();
+                return;
+            }
+            
+            // Валідація таймера на кожному кроці
+            if (isNaN(this.timer)) {
+                console.error('❌ Timer became NaN, stopping game');
+                this.stopTimer();
+                this.endGame();
                 return;
             }
             
@@ -144,7 +150,7 @@ class PVPGameEngine {
             this.ui.updateTimerDisplay();
             
             if (this.timer <= 0) {
-                console.log('🚨 TIMER DEBUG: Timer reached 0, calling endGame', {
+                console.log('🚨 Timer reached 0, ending game', {
                     timer: this.timer,
                     gameActive: this.gameActive,
                     resultSubmitted: this.resultSubmitted
@@ -154,26 +160,27 @@ class PVPGameEngine {
             }
         }, 1000);
         
-        // Зберігаємо глобальне посилання для очистки
-        window.pvpTimerInterval = this.timerInterval;
+        // Зберігаємо унікальний ідентифікатор для цієї гри
+        this.timerInstanceId = `pvp_timer_${this.roomId}_${Date.now()}`;
+        
+        console.log('✅ PVP timer started with ID:', this.timerInstanceId);
     }
 
     stopTimer() {
-        // Зупиняємо основний таймер
+        // БЕЗПЕЧНА очистка тільки власного таймера
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
             this.timerInterval = null;
-            console.log('🛑 PVP timer stopped');
+            console.log('🛑 PVP timer stopped for room:', this.roomId);
         }
         
-        // Зупиняємо глобальний таймер якщо є
-        if (window.pvpTimerInterval) {
-            clearInterval(window.pvpTimerInterval);
-            window.pvpTimerInterval = null;
-            console.log('🛑 Global PVP timer cleared');
+        // Очищаємо ідентифікатор
+        if (this.timerInstanceId) {
+            console.log('🛑 Timer instance cleared:', this.timerInstanceId);
+            this.timerInstanceId = null;
         }
         
-
+        console.log('🛑 Timer safely cleared for this game instance only');
     }
 
     formatTime(seconds) {

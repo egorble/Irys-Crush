@@ -14,8 +14,10 @@ class IrysCrushPVP {
         this.roomsCache = new Map();
         this.lastRoomsUpdate = 0;
         this.eventListeners = new Map();
+        this.instanceId = `pvp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        this.submissionCache = new Map();
         
-        console.log('🎯 PVP System initialized');
+        console.log('🎯 PVP System initialized with instance ID:', this.instanceId);
     }
     
     // Clear current room data
@@ -188,41 +190,46 @@ class IrysCrushPVP {
     setupEventListeners() {
         if (!this.contract) return;
         
-        // КРИТИЧНО: Очищаємо всі старі event listeners щоб уникнути дублікатів
-        this.contract.removeAllListeners('RoomCreated');
-        this.contract.removeAllListeners('PlayerJoinedRoom');
-        this.contract.removeAllListeners('GameStarted');
-        this.contract.removeAllListeners('GameFinished');
-        this.contract.removeAllListeners('PvPGameFinished');
-        
-        console.log('🧹 Cleared old event listeners to prevent duplicates');
-        this.contract.removeAllListeners();
+        // БЕЗПЕЧНЕ очищення тільки наших event listeners
+        if (this.eventListeners.size > 0) {
+            console.log('🧹 Clearing previous event listeners for this instance');
+            this.eventListeners.forEach((listener, eventName) => {
+                this.contract.off(eventName, listener);
+            });
+            this.eventListeners.clear();
+        }
         
         // Listen for room events (only for new events, not historical ones)
-        this.contract.on('RoomCreated', (roomId, host, entryFee, gameTime, event) => {
+        const roomCreatedListener = (roomId, host, entryFee, gameTime, event) => {
             console.log('🏗️ Room created:', { roomId: roomId.toString(), host, entryFee: ethers.formatEther(entryFee) });
             this.onRoomCreated(roomId.toString(), host, entryFee, gameTime);
-        });
+        };
+        this.contract.on('RoomCreated', roomCreatedListener);
+        this.eventListeners.set('RoomCreated', roomCreatedListener);
         
-        this.contract.on('PlayerJoinedRoom', (roomId, player, event) => {
+        const playerJoinedListener = (roomId, player, event) => {
             console.log('🚪 Player joined room:', { roomId: roomId.toString(), player });
             this.onPlayerJoined(roomId.toString(), player);
-        });
+        };
+        this.contract.on('PlayerJoinedRoom', playerJoinedListener);
+        this.eventListeners.set('PlayerJoinedRoom', playerJoinedListener);
         
-        this.contract.on('GameStarted', (roomId, host, event) => {
+        const gameStartedListener = (roomId, host, event) => {
             console.log('🎮 Game started:', { roomId: roomId.toString(), host });
             this.onGameStarted(roomId.toString(), host);
-        });
+        };
+        this.contract.on('GameStarted', gameStartedListener);
+        this.eventListeners.set('GameStarted', gameStartedListener);
         
         // ВИПРАВЛЕНО: Слухаємо правильний event з контракту
-        this.contract.on('PvPGameFinished', (roomId, winner, event) => {
+        const gameFinishedListener = (roomId, winner, event) => {
             console.log('🚨 PVP GAME FINISHED EVENT DEBUG:', { 
                 roomId: roomId.toString(), 
                 winner, 
                 currentRoomId: this.currentRoomId,
                 eventBlockNumber: event?.blockNumber,
                 eventTransactionHash: event?.transactionHash,
-                stackTrace: new Error().stack
+                instanceId: this.instanceId
             });
             
             // Only handle if this is our current room or we're actively monitoring this room
@@ -232,7 +239,9 @@ class IrysCrushPVP {
             } else {
                 console.log('🏁 Game finished for different room, ignoring');
             }
-        });
+        };
+        this.contract.on('PvPGameFinished', gameFinishedListener);
+        this.eventListeners.set('PvPGameFinished', gameFinishedListener);
         
         console.log('✅ Event listeners set up for PVP contract');
     }
