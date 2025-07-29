@@ -608,6 +608,16 @@ async function autoSaveScore() {
   // Get scoreStatusP from main.js context
   const scoreStatusP = document.getElementById('score-status');
   
+  // ВАЖЛИВО: Заборонити оновлення глобального лідерборду з PVP результатами
+  if (window.isPVPMode || window.currentPVPGame) {
+    console.log('🚫 autoSaveScore blocked - PVP mode active. PVP results should not update global leaderboard.');
+    if (scoreStatusP) {
+      scoreStatusP.textContent = '🎯 PVP result (not saved to global leaderboard)';
+      scoreStatusP.style.color = '#ff9800';
+    }
+    return;
+  }
+  
   if (!window.userWallet || !window.userNickname || !window.contract) {
     if (scoreStatusP) {
       scoreStatusP.textContent = '❌ Connect wallet!';

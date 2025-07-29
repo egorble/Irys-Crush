@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modal Size Test</title>
+    <link rel="stylesheet" href="public/style.css">
+    <link rel="stylesheet" href="public/css/pvp.css">
+    <link rel="stylesheet" href="public/css/pvp-results.css">
+</head>
+<body>
+    <div class="menu">
+        <h1>Modal Size Test</h1>
+        <button onclick="showRegularModal()">Show Regular Modal</button>
+        <button onclick="showPVPModal()">Show PVP Modal</button>
+        <button onclick="showPVPResultsModal()">Show PVP Results Modal</button>
+    </div>
+
+    <!-- Regular Modal -->
+    <div id="regular-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Regular Modal</h2>
+            <p>This is a regular modal with standard sizing.</p>
+            <p>Min-width: 320px, Max-width: 90vw, Max-height: 80vh</p>
+            <button onclick="hideModal('regular-modal')">Close</button>
+        </div>
+    </div>
+
+    <!-- PVP Modal -->
+    <div id="pvp-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>PVP Modal</h2>
+            <div class="pvp-main-menu">
+                <button class="pvp-btn primary">Create Room</button>
+                <button class="pvp-btn secondary">Join Room</button>
+                <button class="pvp-btn secondary">Browse Rooms</button>
+            </div>
+            <p>This PVP modal should have the same size constraints as regular modal.</p>
+            <p>Min-width: 320px, Max-width: 500px, Max-height: 80vh</p>
+            <button class="close-btn" onclick="hideModal('pvp-modal')">Close</button>
+        </div>
+    </div>
+
+    <!-- PVP Results Modal -->
+    <div id="pvp-results-modal" class="modal hidden">
+        <div class="modal-content pvp-results-content">
+            <h2>PVP Results</h2>
+            <div class="pvp-winner-section you-won">
+                <h3>🏆 You Won!</h3>
+                <div class="pvp-winner-info">Final Score: 2500</div>
+            </div>
+            <div class="pvp-leaderboard-section">
+                <h4>Final Leaderboard</h4>
+                <div class="pvp-leaderboard">
+                    <div class="pvp-leaderboard-item winner you">
+                        <div class="pvp-player-info">
+                            <span class="pvp-player-rank">1.</span>
+                            <span class="pvp-player-name">You</span>
+                            <span class="pvp-player-badge winner">WINNER</span>
+                        </div>
+                        <span class="pvp-player-score">2500</span>
+                    </div>
+                    <div class="pvp-leaderboard-item">
+                        <div class="pvp-player-info">
+                            <span class="pvp-player-rank">2.</span>
+                            <span class="pvp-player-name">Player2</span>
+                        </div>
+                        <span class="pvp-player-score">2000</span>
+                    </div>
+                </div>
+            </div>
+            <div class="pvp-actions">
+                <button class="pvp-btn primary">Play Again</button>
+                <button class="pvp-btn secondary" onclick="hideModal('pvp-results-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showRegularModal() {
+            document.getElementById('regular-modal').classList.remove('hidden');
+        }
+
+        function showPVPModal() {
+            document.getElementById('pvp-modal').classList.remove('hidden');
+        }
+
+        function showPVPResultsModal() {
+            document.getElementById('pvp-results-modal').classList.remove('hidden');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -831,7 +831,7 @@ app.get('/health', (req, res) => {
 });
 
 // Catch-all route for React app
-app.get('*', (req, res) => {
+app.get('/{*any}', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

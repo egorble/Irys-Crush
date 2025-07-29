@@ -6,7 +6,6 @@ class PVPGameLoader {
     constructor() {
         this.modules = [
             { name: 'PVP Game Styles', path: 'js/pvp/pvp-game-styles.js', global: 'PVPGameStyles' },
-            { name: 'PVP Time Persistence', path: 'js/pvp/pvp-time-persistence.js', global: 'pvpTimePersistence' },
             { name: 'PVP Game Logic', path: 'js/pvp/pvp-game-logic.js', global: 'PVPGameLogic' },
             { name: 'PVP Game UI', path: 'js/pvp/pvp-game-ui.js', global: 'PVPGameUI' },
             { name: 'PVP Game Results', path: 'js/pvp/pvp-game-results.js', global: 'PVPGameResults' },

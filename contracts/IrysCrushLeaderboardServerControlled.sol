@@ -444,18 +444,13 @@ contract IrysCrushLeaderboard {
         }
         if (!winnerFound) revert WinnerNotInPlayers();
         
-        // ✅ FIX 2: Correctly update global scores with proper event emission
+        // ✅ FIX 2: Store PVP scores separately - DO NOT update global leaderboard
         for (uint256 i = 0; i < _players.length; i++) {
             room.finalScores[_players[i]] = _scores[i];
             
-            // Оновлюємо глобальний рахунок якщо кращий
-            uint256 oldScore = players[_players[i]].highScore;
-            if (_scores[i] > oldScore) {
-                players[_players[i]].highScore = _scores[i];
-                players[_players[i]].gamesPlayed++;
-                players[_players[i]].lastPlayed = block.timestamp;
-                emit ScoreUpdated(_players[i], _scores[i], oldScore); // ✅ FIXED: correct old score
-            }
+            // ВАЖЛИВО: PVP результати НЕ оновлюють глобальний лідерборд
+            // Глобальний лідерборд тільки для звичайної гри (submitScore)
+            // PVP має свій окремий лідерборд через finalScores
         }
         
         // Встановлюємо переможця та завершуємо гру

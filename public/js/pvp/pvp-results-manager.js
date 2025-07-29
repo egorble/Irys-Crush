@@ -383,11 +383,6 @@ class PVPResultsManager {
             window.currentPVPGame = null;
         }
         
-        // Clear time persistence
-        if (window.pvpTimePersistence) {
-            window.pvpTimePersistence.onGameEnd(this.roomId || 'unknown');
-        }
-        
         // Clear all timers
         if (window.clearAllTimers) {
             window.clearAllTimers();

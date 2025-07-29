@@ -238,11 +238,12 @@ class GameDatabase {
                 SELECT 
                     gr.player_address,
                     gr.score,
+                    gr.submitted_at,
                     rp.is_host
                 FROM game_results gr
                 JOIN room_players rp ON gr.room_id = rp.room_id AND gr.player_address = rp.player_address
                 WHERE gr.room_id = ?
-                ORDER BY gr.score DESC
+                ORDER BY gr.score DESC, gr.submitted_at ASC
             `, [roomId], (err, rows) => {
                 if (err) {
                     reject(err);

@@ -70,35 +70,22 @@ class PVPGameEngine {
         try {
             console.log('🚀 Starting PVP game...');
 
-            // Спробуємо відновити стан гри з localStorage
-            let gameRestored = false;
-            if (window.pvpTimePersistence) {
-                gameRestored = window.pvpTimePersistence.restoreGameState(this.roomId, this);
+            // Звичайний старт гри
+            this.gameStartTime = Date.now();
+            this.gameEndTime = this.gameStartTime + (this.gameTimeSeconds * 1000);
+            this.gameActive = true;
+            this.score = 0;
+            this.timer = this.gameTimeSeconds;
+            
+            // Final validation before starting timer
+            if (isNaN(this.timer) || this.timer <= 0) {
+                console.warn('⚠️ Invalid timer at game start, resetting to 120 seconds');
+                this.timer = 120;
+                this.gameTimeSeconds = 120;
+                this.gameTimeMinutes = 2;
             }
-
-            if (!gameRestored) {
-                // Звичайний старт гри
-                this.gameStartTime = Date.now();
-                this.gameEndTime = this.gameStartTime + (this.gameTimeSeconds * 1000);
-                this.gameActive = true;
-                this.score = 0;
-                this.timer = this.gameTimeSeconds;
-                
-                // Final validation before starting timer
-                if (isNaN(this.timer) || this.timer <= 0) {
-                    console.warn('⚠️ Invalid timer at game start, resetting to 120 seconds');
-                    this.timer = 120;
-                    this.gameTimeSeconds = 120;
-                    this.gameTimeMinutes = 2;
-                }
-                
-                console.log('🕐 Game starting fresh with timer:', this.timer, 'seconds');
-            } else {
-                // Гра відновлена з localStorage
-                this.gameActive = true;
-                this.gameEndTime = this.gameStartTime + (this.gameTimeSeconds * 1000);
-                console.log('🔄 Game restored with timer:', this.timer, 'seconds');
-            }
+            
+            console.log('🕐 Game starting fresh with timer:', this.timer, 'seconds');
 
             // Show game interface
             this.ui.showGameInterface();
@@ -107,10 +94,7 @@ class PVPGameEngine {
             this.logic.renderBoard();
             this.startTimer();
 
-            // Запускаємо автозбереження стану
-            if (window.pvpTimePersistence) {
-                window.pvpTimePersistence.startAutoSave(this);
-            }
+
 
             console.log('✅ PVP game started successfully');
             return { success: true };
@@ -189,10 +173,7 @@ class PVPGameEngine {
             console.log('🛑 Global PVP timer cleared');
         }
         
-        // Зупиняємо автозбереження якщо активне
-        if (window.pvpTimePersistence) {
-            window.pvpTimePersistence.stopAutoSave();
-        }
+
     }
 
     formatTime(seconds) {
@@ -239,11 +220,6 @@ class PVPGameEngine {
 
         // Clear timers
         this.stopTimer();
-
-        // Очищаємо збережений стан часу
-        if (window.pvpTimePersistence) {
-            window.pvpTimePersistence.onGameEnd(this.roomId);
-        }
 
         // Submit result to server (server-controlled system)
         await this.submitResultToServer();
@@ -387,11 +363,6 @@ class PVPGameEngine {
 
         // Stop timer immediately
         this.stopTimer();
-
-        // Очищаємо збережений стан часу
-        if (window.pvpTimePersistence) {
-            window.pvpTimePersistence.onGameEnd(this.roomId);
-        }
 
         // Submit forfeit result to blockchain
         try {

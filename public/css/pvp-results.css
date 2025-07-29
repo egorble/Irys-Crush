@@ -1,9 +1,14 @@
 /* PVP Results Modal Styles */
 .pvp-results-content {
+    min-width: 320px;
     max-width: 500px;
+    max-height: 80vh;
     min-height: 400px;
     text-align: center;
     position: relative;
+    width: auto;
+    margin: 0 auto;
+    overflow-y: auto;
 }
 
 .pvp-stage {

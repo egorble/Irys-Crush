@@ -42,39 +42,7 @@ class PVPGameStyles {
                 transform: translateY(0);
             }
             
-            .pause-indicator {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: rgba(255, 193, 7, 0.95);
-                color: #856404;
-                padding: 20px 30px;
-                border-radius: 15px;
-                font-size: 18px;
-                font-weight: bold;
-                text-align: center;
-                z-index: 10000;
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-                border: 3px solid #ffc107;
-                backdrop-filter: blur(10px);
-                animation: pausePulse 2s infinite;
-            }
-            
-            .pause-indicator.hidden {
-                display: none;
-            }
-            
-            @keyframes pausePulse {
-                0%, 100% { 
-                    opacity: 1; 
-                    transform: translate(-50%, -50%) scale(1);
-                }
-                50% { 
-                    opacity: 0.8; 
-                    transform: translate(-50%, -50%) scale(1.05);
-                }
-            }
+
             
             @keyframes pulse {
                 0% { opacity: 1; }
@@ -290,14 +258,14 @@ class PVPGameStyles {
                 color: #333;
             }
         `;
-        
+
         document.head.appendChild(style);
     }
 
     static removeStyles() {
         const stylesToRemove = [
             'pvp-styles',
-            'pvp-game-styles', 
+            'pvp-game-styles',
             'pvp-results-styles'
         ];
 

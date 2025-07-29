@@ -61,18 +61,8 @@ class PVPGameUI {
         forfeitBtn.innerHTML = '🏳️ Forfeit Game';
         forfeitBtn.onclick = () => this.gameEngine.forfeitGame();
 
-        // Add pause indicator
-        const pauseIndicator = document.createElement('div');
-        pauseIndicator.id = 'pvp-pause-indicator';
-        pauseIndicator.className = 'pause-indicator hidden';
-        pauseIndicator.innerHTML = '⏸️ Game Paused - Switch back to tab to continue';
-
         // Add elements to game UI
-        gameUI.appendChild(pauseIndicator);
         gameUI.appendChild(forfeitBtn);
-
-        // Add visibility change listener for pause indicator
-        this.addPauseIndicatorListener();
 
         // Add CSS for PVP controls
         if (window.PVPGameStyles) {
@@ -80,20 +70,7 @@ class PVPGameUI {
         }
     }
 
-    addPauseIndicatorListener() {
-        const pauseIndicator = document.getElementById('pvp-pause-indicator');
-        if (!pauseIndicator) return;
 
-        const handleVisibilityChange = () => {
-            if (document.hidden || document.visibilityState === 'hidden') {
-                pauseIndicator.classList.remove('hidden');
-            } else {
-                pauseIndicator.classList.add('hidden');
-            }
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-    }
 
     updateTimerDisplay() {
         // Use existing timer element from main game
@@ -101,22 +78,14 @@ class PVPGameUI {
         if (timerElement) {
             const formattedTime = this.gameEngine.formatTime(this.gameEngine.timer);
             
-            // Перевіряємо чи гра на паузі
-            const isPaused = document.hidden || document.visibilityState === 'hidden';
-            const displayTime = isPaused ? `⏸️ ${formattedTime}` : formattedTime;
-            
             // Update only if value changed to avoid flickering
-            if (timerElement.textContent !== displayTime) {
-                timerElement.textContent = displayTime;
-                console.log('⏰ Timer updated to:', displayTime, isPaused ? '(paused)' : '(active)');
+            if (timerElement.textContent !== formattedTime) {
+                timerElement.textContent = formattedTime;
+                console.log('⏰ Timer updated to:', formattedTime);
             }
 
-            // Стилізація залежно від стану
-            if (isPaused) {
-                timerElement.style.color = '#ffc107';
-                timerElement.style.animation = 'none';
-                timerElement.title = 'Game is paused while tab is inactive';
-            } else if (this.gameEngine.timer <= 30) {
+            // Стилізація залежно від часу
+            if (this.gameEngine.timer <= 30) {
                 timerElement.style.color = '#ff5722';
                 timerElement.style.animation = 'pulse 1s infinite';
                 timerElement.title = 'Time is running out!';
@@ -278,11 +247,6 @@ class PVPGameUI {
             }
         }
         
-        // Clear time persistence
-        if (window.pvpTimePersistence && this.gameEngine && this.gameEngine.roomId) {
-            window.pvpTimePersistence.onGameEnd(this.gameEngine.roomId);
-        }
-        
         // Clear all timers
         if (window.clearAllTimers) {
             window.clearAllTimers();
@@ -345,11 +309,7 @@ class PVPGameUI {
             forfeitBtn.remove();
         }
 
-        // Remove pause indicator
-        const pauseIndicator = document.getElementById('pvp-pause-indicator');
-        if (pauseIndicator) {
-            pauseIndicator.remove();
-        }
+
 
         // Reset game header to original
         const gameHeader = document.querySelector('.game-header') || document.querySelector('#game-ui h1');

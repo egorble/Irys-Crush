@@ -2,6 +2,26 @@
    PVP SYSTEM STYLES
    ========================================== */
 
+/* PVP Modal Size Constraints */
+#pvp-modal .modal-content {
+    min-width: 320px;
+    max-width: 500px;
+    max-height: 80vh;
+    width: auto;
+    margin: 0 auto;
+    overflow-y: auto;
+}
+
+/* Ensure consistent sizing for all PVP content */
+.pvp-main-menu,
+.create-room-form,
+.join-room-form,
+.browse-rooms-container,
+.room-waiting-screen {
+    max-width: 100%;
+    width: auto;
+}
+
 /* Main PVP Interface */
 .pvp-main-menu {
     display: flex;
@@ -95,6 +115,36 @@
     border-color: #ff8a00;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(255, 138, 0, 0.4);
+}
+
+/* Responsive Design for PVP Modals */
+@media (max-width: 600px) {
+    #pvp-modal .modal-content {
+        min-width: 280px;
+        max-width: 95vw;
+        margin: 10px;
+        padding: 1.5rem 1rem;
+    }
+    
+    .pvp-btn {
+        padding: 10px 16px;
+        font-size: 14px;
+        width: 100%;
+        margin: 5px 0;
+    }
+    
+    .pvp-main-menu {
+        gap: 10px;
+        margin: 15px 0;
+    }
+}
+
+@media (max-width: 400px) {
+    #pvp-modal .modal-content {
+        min-width: 260px;
+        max-width: 98vw;
+        padding: 1rem 0.8rem;
+    }
 }
 
 /* Join Room Button */
@@ -662,4 +712,487 @@
 
 .game-info p:not(.pause-status) {
     color: #2c3e50;
+}/*
+ Form Elements Sizing */
+.create-room-form input,
+.create-room-form select,
+.join-room-form input {
+    width: 100%;
+    max-width: 300px;
+    padding: 10px;
+    margin: 5px 0;
+    border: 2px solid rgba(255, 138, 0, 0.6);
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.create-room-form .form-group,
+.join-room-form .form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.create-room-form label,
+.join-room-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* Prize breakdown styling */
+.prize-breakdown {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    text-align: left;
+}
+
+.prize-breakdown h4 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+.prize-breakdown p {
+    margin: 5px 0;
+    color: #495057;
+}
+
+/* Room info display */
+.room-info-display {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    text-align: left;
+}
+
+.room-info-display p {
+    margin: 8px 0;
+    color: #495057;
+}
+
+/* Players list */
+.players-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 15px 0;
+}
+
+.player-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    margin: 5px 0;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border-left: 4px solid #6c757d;
+}
+
+.player-item.host {
+    border-left-color: #ffd700;
+    background: #fff9e6;
+}
+
+.player-item.you {
+    border-left-color: #28a745;
+    background: #e8f5e8;
+}/* B
+rowse Rooms Styles */
+.browse-rooms-container {
+    max-width: 100%;
+}
+
+.rooms-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.rooms-count {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.rooms-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.room-card {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.room-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
+    transition: all 0.3s ease;
+}
+
+.room-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.room-id {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.room-status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.room-status.status-waiting {
+    background: #d4edda;
+    color: #155724;
+}
+
+.room-status.status-full {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.room-status.status-started {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.room-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.room-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.join-btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.join-btn:not(:disabled) {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.join-btn:not(:disabled):hover {
+    background: linear-gradient(135deg, #20c997, #28a745);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.join-btn:disabled {
+    background: #6c757d;
+    color: #fff;
+    cursor: not-allowed;
+}
+
+.no-rooms {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.no-rooms p {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+/* Loading state */
+.loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.loading p {
+    font-size: 1.1rem;
+}/
+* Room Waiting Screen Styles */
+.room-waiting {
+    max-width: 100%;
+}
+
+.room-status-info {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.room-status-info p {
+    margin: 8px 0;
+    color: #495057;
+}
+
+.room-status-info strong {
+    color: #2c3e50;
+}
+
+.room-players {
+    margin: 20px 0;
+}
+
+.room-players h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.room-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.room-actions .pvp-btn {
+    min-width: 120px;
+}
+
+
+
+/* Mobile responsive for room waiting */
+@media (max-width: 600px) {
+    .room-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .room-actions .pvp-btn {
+        width: 100%;
+        min-width: auto;
+        margin: 5px 0;
+    }
+    
+    .room-details {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+    
+    .room-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}/* Err
+or and Success Messages */
+.pvp-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 15px 0;
+    border-left: 4px solid #dc3545;
+}
+
+.pvp-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 15px 0;
+    border-left: 4px solid #28a745;
+}
+
+.pvp-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 15px 0;
+    border-left: 4px solid #ffc107;
+}
+
+.pvp-info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 15px 0;
+    border-left: 4px solid #17a2b8;
+}
+
+/* Form validation styles */
+.form-group.error input,
+.form-group.error select {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-group.success input,
+.form-group.success select {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.form-error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Loading states */
+.pvp-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: #6c757d;
+}
+
+.pvp-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #ff8a00;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Button loading state */
+.pvp-btn.loading {
+    position: relative;
+    color: transparent;
+    pointer-events: none;
+}
+
+.pvp-btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Ensure consistent text alignment */
+.pvp-main-menu h2,
+.create-room-form h2,
+.join-room-form h2,
+.browse-rooms-container h2,
+.room-waiting h2 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+/* Consistent spacing */
+.pvp-section {
+    margin-bottom: 25px;
+}
+
+.pvp-section:last-child {
+    margin-bottom: 0;
+}
+
+/* Ensure buttons don't overflow on small screens */
+@media (max-width: 480px) {
+    .pvp-btn {
+        font-size: 13px;
+        padding: 8px 12px;
+        min-height: 40px;
+    }
+    
+    .room-actions .pvp-btn {
+        min-width: auto;
+    }
+    
+    .pvp-actions {
+        gap: 8px;
+    }
+    
+    .form-group input,
+    .form-group select {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .pvp-btn {
+        border-width: 3px;
+    }
+    
+    .modal-content {
+        border: 2px solid #000;
+    }
+    
+    .pvp-error,
+    .pvp-success,
+    .pvp-warning,
+    .pvp-info {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .pvp-btn,
+    .room-card,
+    .pvp-spinner,
+    .pvp-btn.loading::after {
+        animation: none;
+        transition: none;
+    }
+    
+    .pvp-btn:hover {
+        transform: none;
+    }
 }

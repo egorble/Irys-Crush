@@ -115,7 +115,6 @@ const PVP_TEMPLATES = {
             <div class="room-status-info">
                 <p><strong>Status:</strong> <span id="room-status">Loading...</span></p>
                 <p><strong>Your Role:</strong> ${isHost ? '👑 Host' : '👤 Player'}</p>
-                <p id="host-join-status" style="display: none; color: #ff9800; background: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;"><strong>⚠️ As the host, you need to join your own room and pay the entry fee to participate in the game!</strong></p>
             </div>
             
             <div class="room-info-display" id="room-info-display">
