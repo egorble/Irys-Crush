@@ -7,7 +7,7 @@ function loadServerPVPConfig() {
     console.log('📋 Loading Server-Controlled PVP configuration...');
 
     // Load from deployment file
-    let contractAddress = '0xB028878469af81683616F0D0a36eaC30cfeA5bfA'; // Default from deployment
+    let contractAddress = '0xb99b47558cA055919752D659C8a43FdA47Cb56E2'; // Default from deployment
     
     try {
         // Try to load from deployment file if available
