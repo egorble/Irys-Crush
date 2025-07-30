@@ -80,6 +80,36 @@
     margin-top: 10px;
 }
 
+.pvp-winner-info img {
+    max-width: 200px;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    margin: 10px 0;
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+/* Full-width result images */
+.result-image-fullwidth {
+    width: 100% !important;
+    height: auto !important;
+    max-width: none !important;
+    border-radius: 15px !important;
+    margin: 0 !important;
+    display: block !important;
+    object-fit: cover !important;
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+/* Image-only winner section */
+.pvp-winner-section.image-only {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+
 /* Leaderboard Section */
 .pvp-leaderboard-section {
     margin-bottom: 30px;

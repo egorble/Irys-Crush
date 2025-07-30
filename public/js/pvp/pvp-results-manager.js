@@ -265,13 +265,17 @@ class PVPResultsManager {
                            winner.toLowerCase() === userAddress.toLowerCase();
             
             if (isWinner) {
-                this.elements.winnerText.textContent = '🎉 You Won!';
-                this.elements.winnerInfo.textContent = `Congratulations! You achieved the highest score!`;
-                winnerSection.className = 'pvp-winner-section you-won';
+                // Completely replace the winner section content with just the win image
+                winnerSection.innerHTML = `
+                    <img src="images/win.png" alt="You Won" class="result-image-fullwidth">
+                `;
+                winnerSection.className = 'pvp-winner-section you-won image-only';
             } else if (winner) {
-                this.elements.winnerText.textContent = '🏆 Winner';
-                this.elements.winnerInfo.textContent = `Winner: ${this.formatAddress(winner)}`;
-                winnerSection.className = 'pvp-winner-section you-lost';
+                // Completely replace the winner section content with just the lose image
+                winnerSection.innerHTML = `
+                    <img src="images/lose.png" alt="You Lost" class="result-image-fullwidth">
+                `;
+                winnerSection.className = 'pvp-winner-section you-lost image-only';
             } else {
                 this.elements.winnerText.textContent = '🏁 Game Finished';
                 this.elements.winnerInfo.textContent = 'Results are being processed...';

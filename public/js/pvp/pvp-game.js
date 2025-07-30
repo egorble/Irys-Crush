@@ -47,6 +47,14 @@ class PVPGameEngine {
         this.gameActive = false;
 
         // Additional validation for timer after initialization
+        console.log('🔍 PVP Game constructor final state:', {
+            gameTimeMinutes: this.gameTimeMinutes,
+            gameTimeSeconds: this.gameTimeSeconds,
+            timer: this.timer,
+            roomId: this.roomId,
+            isHost: this.isHost
+        });
+        
         if (isNaN(this.timer) || this.timer <= 0) {
             console.warn('⚠️ Invalid timer value detected after initialization, resetting to 120 seconds');
             this.timer = 120;
@@ -115,15 +123,38 @@ class PVPGameEngine {
         // БЕЗПЕЧНА очистка тільки власних таймерів
         this.stopTimer();
         
+        // Перевіряємо чи немає інших таймерів для цієї кімнати
+        if (window.activeTimers) {
+            for (const [timerId, timerData] of Object.entries(window.activeTimers)) {
+                if (timerData.roomId === this.roomId) {
+                    console.warn('⚠️ Found existing timer for room', this.roomId, '- clearing it');
+                    clearInterval(timerData.interval);
+                    delete window.activeTimers[timerId];
+                }
+            }
+        }
+        
         // Валідація таймера перед стартом
         if (isNaN(this.timer) || this.timer <= 0) {
             console.warn('⚠️ Invalid timer value at start, resetting to default');
             this.timer = this.gameTimeSeconds || 120;
         }
         
+        // Додаткова валідація gameTimeSeconds
+        if (isNaN(this.gameTimeSeconds) || this.gameTimeSeconds <= 0) {
+            console.warn('⚠️ Invalid gameTimeSeconds, resetting to 120');
+            this.gameTimeSeconds = 120;
+            this.timer = 120;
+        }
+        
         this.ui.updateTimerDisplay();
         
-        console.log('⏰ Starting PVP timer with', this.timer, 'seconds (validated)');
+        console.log('⏰ Starting PVP timer with', this.timer, 'seconds (validated)', {
+            gameTimeSeconds: this.gameTimeSeconds,
+            gameTimeMinutes: this.gameTimeMinutes,
+            gameStartTime: this.gameStartTime,
+            expectedEndTime: this.gameStartTime + (this.gameTimeSeconds * 1000)
+        });
         
         // Створюємо новий інтервал з додатковими перевірками
         this.timerInterval = setInterval(() => {
@@ -140,7 +171,14 @@ class PVPGameEngine {
             
             // Валідація таймера на кожному кроці
             if (isNaN(this.timer)) {
-                console.error('❌ Timer became NaN, stopping game');
+                console.error('❌ Timer became NaN, stopping game', {
+                    timer: this.timer,
+                    gameTimeSeconds: this.gameTimeSeconds,
+                    gameStartTime: this.gameStartTime,
+                    currentTime: Date.now(),
+                    gameRunTime: Date.now() - this.gameStartTime,
+                    score: this.score
+                });
                 this.stopTimer();
                 this.endGame();
                 return;
@@ -153,7 +191,11 @@ class PVPGameEngine {
                 console.log('🚨 Timer reached 0, ending game', {
                     timer: this.timer,
                     gameActive: this.gameActive,
-                    resultSubmitted: this.resultSubmitted
+                    resultSubmitted: this.resultSubmitted,
+                    currentScore: this.score,
+                    gameStartTime: this.gameStartTime,
+                    currentTime: Date.now(),
+                    gameRunTime: Date.now() - this.gameStartTime
                 });
                 this.stopTimer();
                 this.endGame();
@@ -162,6 +204,16 @@ class PVPGameEngine {
         
         // Зберігаємо унікальний ідентифікатор для цієї гри
         this.timerInstanceId = `pvp_timer_${this.roomId}_${Date.now()}`;
+        
+        // Реєструємо таймер глобально для безпеки
+        if (!window.activeTimers) {
+            window.activeTimers = {};
+        }
+        window.activeTimers[this.timerInstanceId] = {
+            interval: this.timerInterval,
+            roomId: this.roomId,
+            startTime: Date.now()
+        };
         
         console.log('✅ PVP timer started with ID:', this.timerInstanceId);
     }
@@ -172,6 +224,12 @@ class PVPGameEngine {
             clearInterval(this.timerInterval);
             this.timerInterval = null;
             console.log('🛑 PVP timer stopped for room:', this.roomId);
+            
+            // Видаляємо з глобального реєстру
+            if (window.activeTimers && this.timerInstanceId) {
+                delete window.activeTimers[this.timerInstanceId];
+                console.log('🛑 Timer removed from global registry:', this.timerInstanceId);
+            }
         }
         
         // Очищаємо ідентифікатор
@@ -228,6 +286,28 @@ class PVPGameEngine {
         // Clear timers
         this.stopTimer();
 
+        // Додаткова перевірка: чи гра закінчилася природно
+        const gameRunTime = Date.now() - this.gameStartTime;
+        const expectedGameTime = this.gameTimeSeconds * 1000;
+        const timeDifference = Math.abs(gameRunTime - expectedGameTime);
+        
+        console.log('🕐 Game timing analysis:', {
+            gameRunTime: gameRunTime,
+            expectedGameTime: expectedGameTime,
+            timeDifference: timeDifference,
+            finalScore: this.finalScore,
+            isPrematureEnd: timeDifference > 5000 && this.finalScore === 0
+        });
+
+        // Якщо гра закінчилася передчасно з нульовим результатом, не надсилати
+        if (timeDifference > 5000 && this.finalScore === 0) {
+            console.warn('⚠️ Game ended prematurely with 0 score - not submitting result');
+            if (window.showNotification) {
+                window.showNotification('Game ended unexpectedly. Please try again.', 'warning');
+            }
+            return;
+        }
+
         // Submit result to server (server-controlled system)
         await this.submitResultToServer();
 
@@ -256,8 +336,29 @@ class PVPGameEngine {
 
             console.log('📤 Submitting result to server:', {
                 roomId: this.roomId,
-                score: this.finalScore
+                score: this.finalScore,
+                gameRunTime: Date.now() - this.gameStartTime,
+                expectedGameTime: this.gameTimeSeconds * 1000
             });
+
+            // Додаткова перевірка: не надсилати підозрілі нульові результати
+            if (this.finalScore === 0) {
+                const gameRunTime = Date.now() - this.gameStartTime;
+                const expectedGameTime = this.gameTimeSeconds * 1000;
+                
+                if (gameRunTime < expectedGameTime * 0.1) { // Менше 10% від очікуваного часу
+                    console.warn('⚠️ Suspicious 0 score submission - game too short', {
+                        gameRunTime,
+                        expectedGameTime,
+                        percentage: (gameRunTime / expectedGameTime) * 100
+                    });
+                    
+                    if (window.showNotification) {
+                        window.showNotification('Game ended too quickly. Please try again.', 'warning');
+                    }
+                    return;
+                }
+            }
 
             this.submissionInProgress = true;
 

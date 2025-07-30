@@ -625,6 +625,33 @@ app.post('/api/pvp/debug/process-pending', async (req, res) => {
   }
 });
 
+// Clear all database data (admin endpoint)
+app.post('/api/pvp/debug/clear-database', async (req, res) => {
+  try {
+    console.log('🧹 Admin request: Clearing all database data...');
+    
+    if (!gameDB) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+    
+    const result = await gameDB.clearAllData();
+    
+    console.log('✅ Database cleared successfully');
+    res.json({
+      success: true,
+      message: 'All database data cleared successfully',
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Error clearing database:', error);
+    res.status(500).json({ 
+      error: 'Failed to clear database',
+      details: error.message 
+    });
+  }
+});
+
 // Submit task verification
 app.post('/submit-verification', async (req, res) => {
   try {

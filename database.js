@@ -387,6 +387,54 @@ class GameDatabase {
     // CLEANUP
     // ==========================================
 
+    async clearAllData() {
+        return new Promise((resolve, reject) => {
+            console.log('🧹 Starting database cleanup...');
+            
+            // Clear all tables in correct order (due to foreign key constraints)
+            this.db.serialize(() => {
+                this.db.run('DELETE FROM game_results', (err) => {
+                    if (err) {
+                        console.error('❌ Error clearing game_results:', err.message);
+                        reject(err);
+                        return;
+                    }
+                    console.log('✅ Cleared game_results table');
+                });
+                
+                this.db.run('DELETE FROM room_players', (err) => {
+                    if (err) {
+                        console.error('❌ Error clearing room_players:', err.message);
+                        reject(err);
+                        return;
+                    }
+                    console.log('✅ Cleared room_players table');
+                });
+                
+                this.db.run('DELETE FROM pvp_rooms', (err) => {
+                    if (err) {
+                        console.error('❌ Error clearing pvp_rooms:', err.message);
+                        reject(err);
+                        return;
+                    }
+                    console.log('✅ Cleared pvp_rooms table');
+                });
+                
+                // Reset auto-increment counters
+                this.db.run('DELETE FROM sqlite_sequence WHERE name IN ("room_players", "game_results")', (err) => {
+                    if (err) {
+                        console.error('❌ Error resetting auto-increment:', err.message);
+                        reject(err);
+                        return;
+                    }
+                    console.log('✅ Reset auto-increment counters');
+                    console.log('🎉 Database completely cleared!');
+                    resolve({ success: true, message: 'All data cleared successfully' });
+                });
+            });
+        });
+    }
+
     close() {
         if (this.db) {
             this.db.close((err) => {

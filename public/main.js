@@ -339,6 +339,24 @@ window.showNotification = showNotification;
 window.updateWalletDisplay = updateWalletDisplay;
 window.checkWalletConnection = checkWalletConnection;
 
+// Global timer management
+window.activeTimers = {};
+window.clearAllTimers = function() {
+    console.log('🧹 Clearing all active timers...');
+    let clearedCount = 0;
+    
+    for (const [timerId, timerData] of Object.entries(window.activeTimers)) {
+        if (timerData.interval) {
+            clearInterval(timerData.interval);
+            clearedCount++;
+            console.log('🛑 Cleared timer:', timerId, 'for room:', timerData.roomId);
+        }
+    }
+    
+    window.activeTimers = {};
+    console.log(`✅ Cleared ${clearedCount} active timers`);
+};
+
 // Оновлені глобальні змінні для wallet
 
 // Функція для перевірки існуючого нікнейму
