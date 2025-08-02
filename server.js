@@ -225,6 +225,119 @@ const gameDB = new GameDatabase();
 // Cache for preventing duplicate result processing
 const processingRooms = new Set();
 
+// Transaction queue for nonce management
+class TransactionQueue {
+  constructor() {
+    this.queue = [];
+    this.processing = false;
+    this.gameServerWallet = null;
+    this.contract = null;
+  }
+
+  async initialize() {
+    if (!this.gameServerWallet) {
+      const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+      this.gameServerWallet = new ethers.Wallet(process.env.GAME_SERVER_KEY, provider);
+      
+      const contractABI = [
+        "function submitGameResults(uint256 _roomId, address[] memory _players, uint256[] memory _scores, address _winner)"
+      ];
+      
+      this.contract = new ethers.Contract(
+        process.env.CONTRACT_ADDRESS,
+        contractABI,
+        this.gameServerWallet
+      );
+      
+      console.log('🔗 Transaction queue initialized with game server:', this.gameServerWallet.address);
+    }
+  }
+
+  async addTransaction(roomId, players, scores, winner) {
+    return new Promise((resolve, reject) => {
+      this.queue.push({
+        roomId,
+        players,
+        scores,
+        winner,
+        resolve,
+        reject,
+        timestamp: Date.now()
+      });
+      
+      console.log(`📋 Added transaction to queue for room ${roomId}. Queue length: ${this.queue.length}`);
+      this.processQueue();
+    });
+  }
+
+  async processQueue() {
+    if (this.processing || this.queue.length === 0) {
+      return;
+    }
+
+    this.processing = true;
+    console.log('🔄 Processing transaction queue...');
+
+    while (this.queue.length > 0) {
+      const transaction = this.queue.shift();
+      
+      try {
+        await this.initialize();
+        
+        console.log(`⛓️ Processing blockchain transaction for room ${transaction.roomId}`);
+        console.log(`   Players: ${transaction.players.length}`);
+        console.log(`   Winner: ${transaction.winner}`);
+        console.log(`   Scores: ${transaction.scores.join(', ')}`);
+        
+        // Get current nonce manually to ensure uniqueness
+        const nonce = await this.gameServerWallet.getNonce();
+        console.log(`   Using nonce: ${nonce}`);
+        
+        // Submit transaction with explicit nonce
+        const tx = await Promise.race([
+          this.contract.submitGameResults(
+            transaction.roomId, 
+            transaction.players, 
+            transaction.scores, 
+            transaction.winner,
+            { nonce: nonce }
+          ),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Transaction timeout after 30 seconds')), 30000)
+          )
+        ]);
+        
+        console.log('📝 Blockchain transaction sent:', tx.hash);
+        
+        // Wait for confirmation
+        const receipt = await Promise.race([
+          tx.wait(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Confirmation timeout after 60 seconds')), 60000)
+          )
+        ]);
+        
+        console.log('✅ Blockchain transaction confirmed:', receipt.hash);
+        console.log(`   Gas used: ${receipt.gasUsed.toString()}`);
+        
+        transaction.resolve(receipt.hash);
+        
+        // Small delay between transactions to avoid issues
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+      } catch (error) {
+        console.error(`❌ Error processing transaction for room ${transaction.roomId}:`, error.message);
+        transaction.reject(error);
+      }
+    }
+
+    this.processing = false;
+    console.log('✅ Transaction queue processing completed');
+  }
+}
+
+const transactionQueue = new TransactionQueue();
+
 // Submit game results endpoint (now with database)
 app.post('/api/pvp/submit-results', async (req, res) => {
   try {
@@ -257,10 +370,13 @@ app.post('/api/pvp/submit-results', async (req, res) => {
       setTimeout(() => {
         processGameResults(roomId).finally(() => {
           processingRooms.delete(roomId);
+          console.log(`✅ Room ${roomId} processing completed and removed from queue`);
         });
       }, 2000); // 2 second delay for safety
     } else if (processingRooms.has(roomId)) {
       console.log('🔄 Room', roomId, 'already being processed, skipping...');
+    } else if (!submissionStatus.allSubmitted) {
+      console.log(`⏳ Room ${roomId}: ${submissionStatus.submittedCount}/${submissionStatus.totalPlayers} players submitted`);
     }
     
     res.json({ 
@@ -279,6 +395,13 @@ app.post('/api/pvp/submit-results', async (req, res) => {
 async function processGameResults(roomId) {
   try {
     console.log('🎮 Processing game results for room:', roomId);
+    
+    // Check if already processed
+    const roomInfo = await gameDB.getRoomInfo(roomId, CONTRACT_ADDRESS);
+    if (roomInfo && roomInfo.blockchain_submitted) {
+      console.log('✅ Room', roomId, 'already submitted to blockchain, skipping...');
+      return;
+    }
     
     // Get results from database
     const results = await gameDB.getRoomResults(roomId, CONTRACT_ADDRESS);
@@ -319,60 +442,18 @@ async function processGameResults(roomId) {
   }
 }
 
-// Submit results to blockchain
+// Submit results to blockchain using transaction queue
 async function submitResultsToBlockchain(roomId, players, scores, winner) {
   try {
-    console.log('⛓️ Submitting results to blockchain...');
-    console.log(`   Room ID: ${roomId}`);
-    console.log(`   Players: ${players.length}`);
-    console.log(`   Winner: ${winner}`);
-    console.log(`   Scores: ${scores.join(', ')}`);
+    console.log(`📋 Queuing blockchain submission for room ${roomId}`);
     
-    // Setup blockchain connection
-    const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-    const gameServerWallet = new ethers.Wallet(process.env.GAME_SERVER_KEY, provider);
+    // Add to transaction queue for sequential processing
+    const txHash = await transactionQueue.addTransaction(roomId, players, scores, winner);
     
-    console.log(`   Game Server: ${gameServerWallet.address}`);
-    console.log(`   Contract: ${process.env.CONTRACT_ADDRESS}`);
-    
-    const contractABI = [
-      "function submitGameResults(uint256 _roomId, address[] memory _players, uint256[] memory _scores, address _winner)"
-    ];
-    
-    const contract = new ethers.Contract(
-      process.env.CONTRACT_ADDRESS,
-      contractABI,
-      gameServerWallet
-    );
-    
-    // Submit transaction with timeout
-    console.log('📝 Sending blockchain transaction...');
-    const tx = await Promise.race([
-      contract.submitGameResults(roomId, players, scores, winner),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Transaction timeout after 30 seconds')), 30000)
-      )
-    ]);
-    
-    console.log('📝 Blockchain transaction sent:', tx.hash);
-    
-    // Wait for confirmation with timeout
-    console.log('⏳ Waiting for confirmation...');
-    const receipt = await Promise.race([
-      tx.wait(),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Confirmation timeout after 60 seconds')), 60000)
-      )
-    ]);
-    
-    console.log('✅ Blockchain transaction confirmed:', receipt.hash);
-    console.log(`   Gas used: ${receipt.gasUsed.toString()}`);
-    
-    return receipt.hash;
+    return txHash;
     
   } catch (error) {
-    console.error('❌ Error submitting to blockchain:', error.message);
-    console.error('   Stack:', error.stack);
+    console.error('❌ Error queuing blockchain transaction:', error.message);
     return null;
   }
 }
